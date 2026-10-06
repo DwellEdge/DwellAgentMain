@@ -14,6 +14,7 @@ export default function Payment() {
 
   const amountPerAgent = 3;
   const totalAmount = agents.length * amountPerAgent;
+  const hasSelectedAgents = Array.isArray(agents) && agents.length > 0;
 
   const [sending, setSending] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -22,23 +23,46 @@ export default function Payment() {
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5002";
 
   useEffect(() => {
-    if (!location.state || agents.length === 0) {
+    if (!location.state || !hasSelectedAgents) {
       navigate("/home", { replace: true });
     }
-  }, []);
+  }, [location.state, hasSelectedAgents, navigate]);
 
   const handleProceedToPay = async () => {
+    if (!hasSelectedAgents || totalAmount <= 0) {
+      setErrorMsg("❌ No agents selected. Please choose an agent first.");
+      return;
+    }
+
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "";
+    if (!razorpayKey) {
+      setErrorMsg("❌ Payment gateway is not configured yet. Please contact support.");
+      return;
+    }
+
     setSending(true);
     setErrorMsg("");
 
     try {
-      // 1. Load Razorpay script if needed
+      // 1. Load Razorpay script if needed, but avoid duplicate script tags
       if (!window.Razorpay) {
         await new Promise((resolve, reject) => {
+          const existingScript = document.querySelector(
+            'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+          );
+
+          if (existingScript) {
+            existingScript.addEventListener("load", resolve, { once: true });
+            existingScript.addEventListener("error", () => reject(new Error("Razorpay script failed to load")), {
+              once: true,
+            });
+            return;
+          }
+
           const script = document.createElement("script");
           script.src = "https://checkout.razorpay.com/v1/checkout.js";
           script.onload = resolve;
-          script.onerror = reject;
+          script.onerror = () => reject(new Error("Razorpay script failed to load"));
           document.body.appendChild(script);
         });
       }
@@ -50,14 +74,14 @@ export default function Payment() {
         body: JSON.stringify({ amount: totalAmount }),
       });
       const orderData = await orderRes.json();
-      if (!orderData.success) {
+      if (!orderRes.ok || !orderData.success) {
         throw new Error(orderData.message || "Order creation failed");
       }
       const { order } = orderData;
 
       // 3. Open checkout
       const rzp = new window.Razorpay({
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "",
+        key: razorpayKey,
         amount: order.amount,
         currency: order.currency,
         name: "DwellAgent",
