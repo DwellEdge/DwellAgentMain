@@ -39,7 +39,7 @@ export default function Home() {
   const [activePhotoIndex, setActivePhotoIndex] = useState({});
   const [playingVideo, setPlayingVideo] = useState(null);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5002";
+  const API_BASE = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || "http://localhost:5002").replace(/\/$/, "");
 
   const makeRowKey = (agentId, ptId) => `${agentId}::${ptId}`;
 
@@ -246,14 +246,18 @@ export default function Home() {
   useEffect(() => {
     axios.get(`${API_BASE}/api/property-types`)
       .then((res) => {
-        const types = res.data || [];
+        const types = Array.isArray(res.data) ? res.data : [];
         setPropertyTypes(types);
         setSelectedPropertyTypeIds((prev) =>
           prev.length > 0 ? prev : types[0] ? [types[0].propertyTypeId] : []
         );
       })
-      .catch(console.error);
-  }, []);
+      .catch((err) => {
+        console.error("Failed to load property types:", err.message);
+        setPropertyTypes([]);
+        setSelectedPropertyTypeIds([]);
+      });
+  }, [API_BASE]);
 
   useEffect(() => {
     if (selectedCity && area && searchPerformed) {

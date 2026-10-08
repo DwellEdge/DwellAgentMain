@@ -20,7 +20,7 @@ export default function Payment() {
   const [paidAgents, setPaidAgents] = useState([]); // full agent details shown in the popup
   const [errorMsg, setErrorMsg] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5002";
+  const API_BASE = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || "http://localhost:5002").replace(/\/$/, "");
 
   useEffect(() => {
     if (!location.state || agents.length === 0) {
