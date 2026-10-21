@@ -41,6 +41,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://dwelledge.github.io",
   "https://dwell-agent-vercel.vercel.app",
+  "https://dwell-agent-main.vercel.app/",
 ];
 
 app.use(cors({
