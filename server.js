@@ -36,13 +36,13 @@ if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
 
 // Origins are scheme + host (+ port) only. No paths, no trailing slash.
-const allowedOrigins = [
-  "http://localhost:5178",
-  "http://localhost:5173",
-  "https://dwelledge.github.io",
-  "https://dwell-agent-vercel.vercel.app",
-  "https://dwell-agent-main.vercel.app/",
-];
+ const allowedOrigins = [
+     "http://localhost:5178",
+     "http://localhost:5173",
+     "https://dwelledge.github.io",
+     "https://dwell-agent-vercel.vercel.app",
+     "https://dwell-agent-main.vercel.app",
+   ];
 
 app.use(cors({
   origin: (origin, callback) => {
