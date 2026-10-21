@@ -15,7 +15,7 @@ const propertyTypeGetRoutes = require("./routes/propertyType");
 const propertyTypeCreateRoutes = require("./routes/propertyTypeRoutes");
 const locationRoutes = require("./routes/locationRoutes");
 const transactionHistoryRoutes = require("./routes/transactionHistoryRoutes");
-const agentAuthRoutes = require("./routes/agentauthRoutes");
+const agentAuthRoutes = require("./routes/agentAuthRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const propertyMediaRoutes = require("./routes/propertyMediaRoutes");
@@ -35,12 +35,12 @@ const videosDir = path.join(uploadsDir, "videos");
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
 
+// Origins are scheme + host (+ port) only. No paths, no trailing slash.
 const allowedOrigins = [
   "http://localhost:5178",
   "http://localhost:5173",
   "https://dwelledge.github.io",
-  "https://dwelledge.github.io/DwellAgentTest",
-  "https://dwell-agent-vercel.vercel.app"
+  "https://dwell-agent-vercel.vercel.app",
 ];
 
 app.use(cors({
@@ -65,7 +65,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve files that exist on this server's disk
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// If a file isn't on this server, redirect to the test backend that still has it
+app.use("/uploads", (req, res) => {
+  res.redirect(302, `https://dwellagenttest-backend-gd5x.onrender.com/uploads${req.url}`);
+});
 
 app.get("/", (req, res) => {
   res.send("Server Running");
